@@ -2,10 +2,11 @@ name: WordPress CI/CD
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 env:
-  IMAGE_NAME: yourdockerhubusername/wordpress
+  IMAGE_NAME: vanshikakumar10/wordpress
 
 jobs:
   build-and-deploy:
@@ -23,12 +24,12 @@ jobs:
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build and push Docker image with build_number
+      - name: Build and push Docker image
         run: |
           docker build -t $IMAGE_NAME:${{ env.BUILD_NUMBER }} .
           docker push $IMAGE_NAME:${{ env.BUILD_NUMBER }}
 
-      - name: Deploy to remote server
+      - name: Deploy to remote server via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -38,8 +39,7 @@ jobs:
             docker pull $IMAGE_NAME:${{ env.BUILD_NUMBER }}
             docker stop wordpress-wp || true
             docker rm wordpress-wp || true
-            docker run -d -p 8080:80 \
-              --name wordpress-wp \
+            docker run -d -p 8080:80 --name wordpress-wp \
               --link mysql-wp:mysql \
               -e WORDPRESS_DB_HOST=mysql:3306 \
               -e WORDPRESS_DB_NAME=wordpress \
