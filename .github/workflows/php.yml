@@ -3,7 +3,7 @@ name: WordPress CI/CD
 on:
   push:
     branches:
-      - main
+      - dev
 
 env:
   IMAGE_NAME: vanshikakumar10/wordpress
