@@ -1,29 +1,48 @@
-name: Deploy PHP Project to EC2
+name: WordPress CI/CD
 
 on:
   push:
-    branches:
-      - dev
+    branches: [main]
+
+env:
+  IMAGE_NAME: yourdockerhubusername/wordpress
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        cd ~/.ssh
-        touch id_rsa
-        sudo apt update && sudo apt install openssh-server -y
-        echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-        ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-          cd ${{ secrets.PROJECT_PATH }} &&
-          git pull origin dev &&
-          sudo systemctl restart apache2
-        "
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push Docker image with build_number
+        run: |
+          docker build -t $IMAGE_NAME:${{ env.BUILD_NUMBER }} .
+          docker push $IMAGE_NAME:${{ env.BUILD_NUMBER }}
+
+      - name: Deploy to remote server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            docker pull $IMAGE_NAME:${{ env.BUILD_NUMBER }}
+            docker stop wordpress-wp || true
+            docker rm wordpress-wp || true
+            docker run -d -p 8080:80 \
+              --name wordpress-wp \
+              --link mysql-wp:mysql \
+              -e WORDPRESS_DB_HOST=mysql:3306 \
+              -e WORDPRESS_DB_NAME=wordpress \
+              -e WORDPRESS_DB_USER=wpuser \
+              -e WORDPRESS_DB_PASSWORD=wppass \
+              $IMAGE_NAME:${{ env.BUILD_NUMBER }}
