@@ -29,12 +29,4 @@ jobs:
           script: |
             cd /var/www/html
             docker build . -t wordpress:${{ env.BUILD_NUMBER }}
-            docker stop wordpress-wp || true
-            docker rm wordpress-wp || true
-            docker run -d -p 8080:80 --name wordpress-wp \
-              --link mysql-wp:mysql \
-              -e WORDPRESS_DB_HOST=mysql:3306 \
-              -e WORDPRESS_DB_NAME=wordpress \
-              -e WORDPRESS_DB_USER=wpuser \
-              -e WORDPRESS_DB_PASSWORD=wppass \
-              wordpress:${{ env.BUILD_NUMBER }}
+            echo " Image built as wordpress:${{ env.BUILD_NUMBER }}"
