@@ -22,9 +22,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}   # should be 'ubuntu'
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            echo "✅ SSH access successful."
+            echo " SSH access successful."
             cd /var/www/html
             git pull origin dev
             docker build . -t wordpress:${{ env.BUILD_NUMBER }}
-            echo "✅ Docker image built: wordpress:${{ env.BUILD_NUMBER }}"
+            echo "Docker image built: wordpress:${{ env.BUILD_NUMBER }}"
 
