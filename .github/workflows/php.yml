@@ -27,5 +27,6 @@ jobs:
             git pull origin dev
             docker build . -t wordpress:v11
             sed -i 's|wordpress:v10|wordpress:v11|g' "docker-compose.yml"
-            echo "Docker image built: wordpress:${{ env.BUILD_NUMBER }}"
+            docker-compose down
+            docker-compose up
 
