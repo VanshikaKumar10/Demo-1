@@ -28,5 +28,5 @@ jobs:
             docker build . -t wordpress:v11
             sed -i 's|wordpress:v10|wordpress:v11|g' "docker-compose.yml"
             docker-compose down
-            docker-compose up
+            docker-compose up -d
 
