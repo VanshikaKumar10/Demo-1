@@ -5,3 +5,5 @@ CI/CD: make changes in GitHub, so that it reflects in the docker file or use v
 Php.yml
 
 vanshika
+
+Wordpress project
